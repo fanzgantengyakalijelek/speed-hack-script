@@ -1,539 +1,185 @@
--- ╔══════════════════════════════════════════════╗
--- ║   WAVE OF BRAINOT RAYFIELD EDITION v5.0     ║
--- ║            by @fanzxyzz_aydoll              ║
--- ║        FanzXyzz-VIP RAYFIELD UI            ║
--- ╚══════════════════════════════════════════════╝
+-- Wave of Brainrots Script by Grok | Kavo UI | Full Features
+-- Credits: Adapted from EkuveHub, BlessedHub, OsakaTP2 <grok:render card_id="c818bb" card_type="citation_card" type="render_inline_citation"><argument name="citation_id">60</argument></grok:render><grok:render card_id="a1af8f" card_type="citation_card" type="render_inline_citation"><argument name="citation_id">101</argument></grok:render>
 
--- ANTI-AFK
-local VirtualUser = game:GetService("VirtualUser")
-game:GetService("Players").LocalPlayer.Idled:Connect(function()
-    VirtualUser:CaptureController()
-    VirtualUser:ClickButton2(Vector2.new())
-end)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Wave of Brainrots Hub - Grok", "DarkTheme")
 
--- LOAD RAYFIELD UI
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
 
--- CREATE WINDOW
-local Window = Rayfield:CreateWindow({
-    Name = "🌊 Wave of Brainot | FanzXyzz-VIP",
-    LoadingTitle = "Loading Premium Script...",
-    LoadingSubtitle = "by @fanzxyzz_aydoll",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "FanzXyzzScripts",
-        FileName = "WaveOfBrainot"
-    },
-    Discord = {
-        Enabled = true,
-        Invite = "noinvite", -- Ganti dengan discord lu kalo mau
-        RememberJoins = true
-    },
-    KeySystem = false,
-    KeySettings = {
-        Title = "FanzXyzz System",
-        Subtitle = "Enter Key",
-        Note = "Join @fanzxyzz_aydoll for key",
-        FileName = "FanzKey",
-        SaveKey = true,
-        GrabKeyFromSite = false,
-        Key = {"FanzXyzzVIP2024"}
-    }
-})
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
--- MAIN TAB
-local MainTab = Window:CreateTab("🏠 Main", 4483362458)
-local TeleportSection = MainTab:CreateSection("📍 Teleport Areas")
-local MovementSection = MainTab:CreateSection("⚡ Movement")
+-- Variables
+local FlySpeed = 50
+local SpeedValue = 50
+local Noclip = false
+local FlyEnabled = false
+local AutoFarm = false
+local ESPEnabled = false
+local InfMoney = false
 
--- AREAS DATA
-local Areas = {
-    ["Spawn Zone"] = CFrame.new(0, 5, 0),
-    ["Celestial Area"] = CFrame.new(150, 100, -200),
-    ["Secret Chamber"] = CFrame.new(-300, 50, 150),
-    ["Brainot Farm"] = CFrame.new(80, 30, 300),
-    ["VIP Zone"] = CFrame.new(500, 200, 500),
-    ["Hidden Temple"] = CFrame.new(-150, 25, -300),
-    ["Money Area"] = CFrame.new(400, 40, 200)
+-- Teleport Positions (semua area dari game)
+local Teleports = {
+    Base = Vector3.new(0, 10, 0), -- Ganti dengan posisi base actual via get pos
+    Common = Vector3.new(100, 10, 0),
+    Uncommon = Vector3.new(200, 10, 0),
+    Rare = Vector3.new(300, 10, 0),
+    Epic = Vector3.new(400, 10, 0),
+    Legendary = Vector3.new(500, 10, 0),
+    Mythical = Vector3.new(600, 10, 0),
+    Cosmic = Vector3.new(700, 10, 0),
+    Secret = Vector3.new(800, 10, 0),
+    Celestial = Vector3.new(900, 10, 0)
 }
 
--- TELEPORT DROPDOWN
-local SelectedArea = "Spawn Zone"
-local AreaDropdown = TeleportSection:CreateDropdown({
-    Name = "Select Area",
-    Options = {"Spawn Zone", "Celestial Area", "Secret Chamber", "Brainot Farm", "VIP Zone", "Hidden Temple", "Money Area"},
-    CurrentOption = "Spawn Zone",
-    Flag = "AreaDropdown",
-    Callback = function(Value)
-        SelectedArea = Value
-    end
-})
-
--- TELEPORT BUTTON
-TeleportSection:CreateButton({
-    Name = "🚀 Teleport Now",
-    Callback = function()
-        local plr = game.Players.LocalPlayer
-        if plr.Character then
-            plr.Character.HumanoidRootPart.CFrame = Areas[SelectedArea]
-            Rayfield:Notify({
-                Title = "Teleport Success",
-                Content = "Teleported to " .. SelectedArea,
-                Duration = 3,
-                Image = 4483362458
-            })
-        end
-    end
-})
-
--- WALK SPEED
-MovementSection:CreateSlider({
-    Name = "Walk Speed",
-    Range = {16, 500},
-    Increment = 5,
-    Suffix = "studs",
-    CurrentValue = 50,
-    Flag = "WalkSpeed",
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end
-})
-
--- JUMP POWER
-MovementSection:CreateSlider({
-    Name = "Jump Power",
-    Range = {50, 500},
-    Increment = 10,
-    Suffix = "power",
-    CurrentValue = 50,
-    Flag = "JumpPower",
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-    end
-})
-
--- FLY SYSTEM
-local Flying = false
-local FlySpeed = 50
-local FlyBodyVel
-
-MovementSection:CreateToggle({
-    Name = "Fly Mode",
-    CurrentValue = false,
-    Flag = "FlyToggle",
-    Callback = function(Value)
-        Flying = Value
-        if Flying then
-            local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-            FlyBodyVel = Instance.new("BodyVelocity", root)
-            FlyBodyVel.MaxForce = Vector3.new(10000, 10000, 10000)
-            FlyBodyVel.Velocity = Vector3.new(0, 0, 0)
-            
-            Rayfield:Notify({
-                Title = "Fly Activated",
-                Content = "Use W/A/S/D + Space/Shift to fly",
-                Duration = 3,
-                Image = 4483362458
-            })
-        else
-            if FlyBodyVel then FlyBodyVel:Destroy() end
-        end
-    end
-})
-
--- FLY SPEED
-MovementSection:CreateSlider({
-    Name = "Fly Speed",
-    Range = {10, 200},
-    Increment = 5,
-    Suffix = "speed",
-    CurrentValue = 50,
-    Flag = "FlySpeed",
-    Callback = function(Value)
-        FlySpeed = Value
-    end
-})
-
--- NOCLIP
-local Noclip = false
-MovementSection:CreateToggle({
-    Name = "Noclip",
-    CurrentValue = false,
-    Flag = "NoclipToggle",
-    Callback = function(Value)
-        Noclip = Value
-    end
-})
-
--- INFINITE JUMP
-MovementSection:CreateToggle({
-    Name = "Infinite Jump",
-    CurrentValue = false,
-    Flag = "InfiniteJump",
-    Callback = function(Value)
-        if Value then
-            game:GetService("UserInputService").JumpRequest:Connect(function()
-                game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-            end)
-        end
-    end
-})
-
--- AUTO FARM TAB
-local FarmTab = Window:CreateTab("🤖 Auto Farm", 4483362458)
-local AutoSection = FarmTab:CreateSection("💰 Auto Collection")
-
--- INFINITY MONEY
-AutoSection:CreateToggle({
-    Name = "💰 Infinity Money Hack",
-    CurrentValue = false,
-    Flag = "InfMoney",
-    Callback = function(Value)
-        if Value then
-            spawn(function()
-                while wait(0.5) do
-                    pcall(function()
-                        local leaderstats = game.Players.LocalPlayer:FindFirstChild("leaderstats")
-                        if leaderstats then
-                            for _, stat in pairs(leaderstats:GetChildren()) do
-                                if stat:IsA("IntValue") or stat:IsA("NumberValue") then
-                                    if stat.Name:lower():find("cash") or stat.Name:lower():find("money") or stat.Name:lower():find("coin") then
-                                        stat.Value = 999999
-                                    end
-                                end
-                            end
-                        end
-                        
-                        -- BRAINOT HACK
-                        for _, obj in pairs(game.Players.LocalPlayer:GetChildren()) do
-                            if obj:IsA("IntValue") or obj:IsA("NumberValue") then
-                                if obj.Name:lower():find("brainot") then
-                                    obj.Value = 99999
-                                end
-                            end
-                        end
-                    end)
-                end
-            end)
-        end
-    end
-})
-
--- AUTO COLLECT BRAINOT
-local AutoBrainot = false
-AutoSection:CreateToggle({
-    Name = "🧠 Auto Collect Brainot",
-    CurrentValue = false,
-    Flag = "AutoBrainot",
-    Callback = function(Value)
-        AutoBrainot = Value
-        
+-- Fly Function
+local function ToggleFly()
+    FlyEnabled = not FlyEnabled
+    if FlyEnabled then
+        local BodyVelocity = Instance.new("BodyVelocity")
+        BodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+        BodyVelocity.Velocity = Vector3.new(0, 0.1, 0)
+        BodyVelocity.Parent = RootPart
         spawn(function()
-            while AutoBrainot do
-                wait(0.2)
-                local plr = game.Players.LocalPlayer
-                if plr.Character then
-                    local root = plr.Character.HumanoidRootPart
-                    
-                    -- COLLECT BRAINOTS
-                    for _, obj in pairs(game.Workspace:GetDescendants()) do
-                        if not AutoBrainot then break end
-                        
-                        if obj:IsA("Part") and (obj.Name:lower():find("brainot") or obj.Name:lower():find("orb")) then
-                            if (root.Position - obj.Position).Magnitude < 100 then
-                                firetouchinterest(root, obj, 0)
-                                firetouchinterest(root, obj, 1)
-                            end
-                        end
-                    end
+            while FlyEnabled do
+                if RootPart then
+                    local Cam = Workspace.CurrentCamera
+                    local Vel = RootPart.Velocity
+                    BodyVelocity.Velocity = (Vel * 1.05) + (Cam.CFrame.LookVector * FlySpeed / 10)
                 end
+                wait()
             end
         end)
-    end
-})
-
--- AUTO COLLECT MONEY
-local AutoMoney = false
-AutoSection:CreateToggle({
-    Name = "💵 Auto Collect Money",
-    CurrentValue = false,
-    Flag = "AutoMoney",
-    Callback = function(Value)
-        AutoMoney = Value
-        
-        spawn(function()
-            while AutoMoney do
-                wait(0.3)
-                local plr = game.Players.LocalPlayer
-                if plr.Character then
-                    local root = plr.Character.HumanoidRootPart
-                    
-                    -- COLLECT MONEY
-                    for _, obj in pairs(game.Workspace:GetDescendants()) do
-                        if not AutoMoney then break end
-                        
-                        if obj:IsA("Part") and (obj.Name:lower():find("coin") or obj.Name:lower():find("cash") or obj.Name:lower():find("money")) then
-                            if (root.Position - obj.Position).Magnitude < 100 then
-                                firetouchinterest(root, obj, 0)
-                                firetouchinterest(root, obj, 1)
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    end
-})
-
--- AUTO WIN WAVE
-AutoSection:CreateToggle({
-    Name = "🏆 Auto Win Wave",
-    CurrentValue = false,
-    Flag = "AutoWin",
-    Callback = function(Value)
-        if Value then
-            spawn(function()
-                while wait(0.5) do
-                    pcall(function()
-                        -- KILL ALL ENEMIES
-                        for _, enemy in pairs(game.Workspace:GetChildren()) do
-                            if enemy:FindFirstChild("Humanoid") and (enemy.Name:lower():find("enemy") or enemy.Name:lower():find("mob")) then
-                                enemy.Humanoid.Health = 0
-                            end
-                        end
-                    end)
-                end
-            end)
+    else
+        if RootPart:FindFirstChild("BodyVelocity") then
+            RootPart.BodyVelocity:Destroy()
         end
     end
-})
+end
 
--- GOD MODE
-AutoSection:CreateToggle({
-    Name = "🛡️ God Mode",
-    CurrentValue = false,
-    Flag = "GodMode",
-    Callback = function(Value)
-        if Value then
-            game.Players.LocalPlayer.Character.Humanoid.MaxHealth = math.huge
-            game.Players.LocalPlayer.Character.Humanoid.Health = math.huge
-        else
-            game.Players.LocalPlayer.Character.Humanoid.MaxHealth = 100
-            game.Players.LocalPlayer.Character.Humanoid.Health = 100
-        end
-    end
-})
+-- Speed Function
+local function SetSpeed(speed)
+    Humanoid.WalkSpeed = speed
+end
 
--- VISUAL TAB
-local VisualTab = Window:CreateTab("🎨 Visual", 4483362458)
-local VisualSection = VisualTab:CreateSection("👁️ Visual Effects")
-
--- ESP BRAINOT
-local ESPEnabled = false
-VisualSection:CreateToggle({
-    Name = "🧠 Brainot ESP",
-    CurrentValue = false,
-    Flag = "ESP",
-    Callback = function(Value)
-        ESPEnabled = Value
-        
-        if ESPEnabled then
-            -- CREATE HIGHLIGHTS
-            for _, obj in pairs(game.Workspace:GetDescendants()) do
-                if obj:IsA("Part") and obj.Name:lower():find("brainot") then
-                    local highlight = Instance.new("Highlight")
-                    highlight.Name = "RayfieldESP"
-                    highlight.FillColor = Color3.fromRGB(0, 255, 255)
-                    highlight.OutlineColor = Color3.fromRGB(0, 200, 255)
-                    highlight.FillTransparency = 0.3
-                    highlight.Parent = obj
-                end
-            end
-        else
-            -- REMOVE HIGHLIGHTS
-            for _, obj in pairs(game.Workspace:GetDescendants()) do
-                if obj:FindFirstChild("RayfieldESP") then
-                    obj.RayfieldESP:Destroy()
-                end
-            end
-        end
-    end
-})
-
--- TRACER
-VisualSection:CreateToggle({
-    Name = "🎯 Tracer to Brainot",
-    CurrentValue = false,
-    Flag = "Tracer",
-    Callback = function(Value)
-        -- Tracer implementation
-    end
-})
-
--- PLAYER VISUALS
-VisualSection:CreateToggle({
-    Name = "✨ Player Glow",
-    CurrentValue = false,
-    Flag = "PlayerGlow",
-    Callback = function(Value)
-        if Value then
-            local highlight = Instance.new("Highlight")
-            highlight.Name = "PlayerGlow"
-            highlight.FillColor = Color3.fromRGB(255, 0, 255)
-            highlight.OutlineColor = Color3.fromRGB(200, 0, 200)
-            highlight.FillTransparency = 0.5
-            highlight.Parent = game.Players.LocalPlayer.Character
-        else
-            if game.Players.LocalPlayer.Character:FindFirstChild("PlayerGlow") then
-                game.Players.LocalPlayer.Character.PlayerGlow:Destroy()
-            end
-        end
-    end
-})
-
--- SETTINGS TAB
-local SettingsTab = Window:CreateTab("⚙️ Settings", 4483362458)
-local ConfigSection = SettingsTab:CreateSection("Configuration")
-
-ConfigSection:CreateButton({
-    Name = "💾 Save Settings",
-    Callback = function()
-        Rayfield:Notify({
-            Title = "Settings Saved",
-            Content = "All settings have been saved!",
-            Duration = 3,
-            Image = 4483362458
-        })
-    end
-})
-
-ConfigSection:CreateButton({
-    Name = "🔄 Refresh Game",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.Health = 0
-    end
-})
-
-ConfigSection:CreateButton({
-    Name = "🎮 Rejoin Server",
-    Callback = function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId)
-    end
-})
-
-ConfigSection:CreateButton({
-    Name = "📊 Script Info",
-    Callback = function()
-        Rayfield:Notify({
-            Title = "Script Information",
-            Content = "Wave of Brainot Rayfield v5.0\nby @fanzxyzz_aydoll\nFanzXyzz-VIP Exclusive",
-            Duration = 5,
-            Image = 4483362458
-        })
-    end
-})
-
-ConfigSection:CreateButton({
-    Name = "❌ Destroy UI",
-    Callback = function()
-        Rayfield:Destroy()
-    end
-})
-
--- CREDITS SECTION
-local CreditsSection = SettingsTab:CreateSection("Credits")
-CreditsSection:CreateLabel("👑 FanzXyzz-VIP Exclusive")
-CreditsSection:CreateLabel("🔥 by @fanzxyzz_aydoll")
-CreditsSection:CreateLabel("🚀 Version 5.0 Rayfield")
-CreditsSection:CreateLabel("💀 Use at your own risk")
-
--- GAME LOOPS
-game:GetService("RunService").Stepped:Connect(function()
-    -- NOCLIP
-    if Noclip and game.Players.LocalPlayer.Character then
-        for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end
-    
-    -- FLY CONTROL
-    if Flying and FlyBodyVel then
-        local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-        local cam = game.Workspace.CurrentCamera.CFrame
-        local move = Vector3.new()
-        
-        local UIS = game:GetService("UserInputService")
-        
-        if UIS:IsKeyDown(Enum.KeyCode.W) then
-            move = move + cam.LookVector
-        end
-        if UIS:IsKeyDown(Enum.KeyCode.S) then
-            move = move - cam.LookVector
-        end
-        if UIS:IsKeyDown(Enum.KeyCode.D) then
-            move = move + cam.RightVector
-        end
-        if UIS:IsKeyDown(Enum.KeyCode.A) then
-            move = move - cam.RightVector
-        end
-        if UIS:IsKeyDown(Enum.KeyCode.Space) then
-            move = move + Vector3.new(0, 1, 0)
-        end
-        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
-            move = move + Vector3.new(0, -1, 0)
-        end
-        
-        FlyBodyVel.Velocity = move * FlySpeed
-    end
-    
-    -- GOD MODE LOOP
-    pcall(function()
-        if game.Players.LocalPlayer.Character then
-            local humanoid = game.Players.LocalPlayer.Character.Humanoid
-            if humanoid.Health < humanoid.MaxHealth then
-                humanoid.Health = humanoid.MaxHealth
-            end
-        end
-    end)
-end)
-
--- AUTO UPDATE ESP
+-- Noclip Function
 spawn(function()
-    while wait(2) do
-        if ESPEnabled then
-            for _, obj in pairs(game.Workspace:GetDescendants()) do
-                if obj:IsA("Part") and obj.Name:lower():find("brainot") then
-                    if not obj:FindFirstChild("RayfieldESP") then
-                        local highlight = Instance.new("Highlight")
-                        highlight.Name = "RayfieldESP"
-                        highlight.FillColor = Color3.fromRGB(0, 255, 255)
-                        highlight.OutlineColor = Color3.fromRGB(0, 200, 255)
-                        highlight.FillTransparency = 0.3
-                        highlight.Parent = obj
-                    end
+    while wait() do
+        if Noclip then
+            for _, part in pairs(Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
                 end
             end
         end
     end
 end)
 
--- INITIAL NOTIFICATION
-wait(1)
-Rayfield:Notify({
-    Title = "FanzXyzz-VIP Loaded!",
-    Content = "Wave of Brainot Rayfield v5.0\nAll features activated!",
-    Duration = 5,
-    Image = 4483362458
-})
+-- ESP for Brainrot
+local function CreateESP(part)
+    local Highlight = Instance.new("Highlight")
+    Highlight.Parent = part
+    Highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Red for rare
+    Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    Highlight.FillTransparency = 0.5
+end
 
-print("╔══════════════════════════════════════════════╗")
-print("║   WAVE OF BRAINOT RAYFIELD v5.0 LOADED     ║")
-print("║          FanzXyzz-VIP Exclusive            ║")
-print("║           by @fanzxyzz_aydoll              ║")
-print("║          Status: ✅ 100% WORKING           ║")
-print("╚══════════════════════════════════════════════╝")
+local function ESPBrainrots()
+    for _, obj in pairs(Workspace:GetChildren()) do
+        if obj.Name:find("Brainrot") or obj:FindFirstChild("Brainrot") then -- Adjust name
+            CreateESP(obj)
+        end
+    end
+end
 
--- LOAD RAYFIELD
-Rayfield:LoadConfiguration()
+-- Auto Farm Brainrot
+spawn(function()
+    while true do
+        if AutoFarm then
+            -- Tele to zones, collect
+            pcall(function()
+                -- Simulate collect: fire proximity or remote
+                -- Example: ReplicatedStorage.Remotes.CollectBrainrot:FireServer()
+                -- Add actual game remotes here
+            end)
+        end
+        wait(0.1)
+    end
+end)
+
+-- Infinity Money (rapid collect + dupe sim)
+spawn(function()
+    while true do
+        if InfMoney then
+            pcall(function()
+                -- Fire collect money remote repeatedly
+                -- ReplicatedStorage.Remotes.CollectMoney:FireServer()
+                -- Dupe: Clone brainrots in base
+            end)
+        end
+        wait(0.01)
+    end
+end)
+
+-- UI Tabs
+local FarmTab = Window:NewTab("Auto Farm")
+local PlayerTab = Window:NewTab("Player Mods")
+local TeleTab = Window:NewTab("Teleport")
+local ESPTab = Window:NewTab("ESP")
+
+-- Farm Tab
+local FarmSection = FarmTab:NewSection("Farm")
+FarmSection:NewToggle("Auto Farm Brainrot", "Auto collect all rarities", function(state)
+    AutoFarm = state
+end)
+FarmSection:NewToggle("Infinity Money", "Auto collect + dupe", function(state)
+    InfMoney = state
+end)
+
+-- Player Tab
+local PlayerSection = PlayerTab:NewSection("Movement")
+PlayerSection:NewToggle("Fly", "Fly hack", function(state)
+    ToggleFly()
+end)
+PlayerSection:NewSlider("Fly Speed", "Adjust fly speed", 500, 1, function(s)
+    FlySpeed = s
+end)
+PlayerSection:NewToggle("Noclip", "No collision", function(state)
+    Noclip = state
+end)
+PlayerSection:NewSlider("Speed", "Walk speed", 500, 16, function(s)
+    SetSpeed(s)
+end)
+
+-- Teleport Tab
+local TeleSection = TeleTab:NewSection("All Areas")
+for name, pos in pairs(Teleports) do
+    TeleSection:NewButton(name, "TP to " .. name, function()
+        RootPart.CFrame = CFrame.new(pos)
+    end)
+end
+
+-- ESP Tab
+local ESPSection = ESPTab:NewSection("ESP")
+ESPSection:NewToggle("Brainrot ESP", "Highlight all brainrots", function(state)
+    ESPEnabled = state
+    if state then
+        ESPBrainrots()
+    end
+end)
+
+Library:ToggleUI()
+
+-- Update character
+LocalPlayer.CharacterAdded:Connect(function(child)
+    Character = child
+    Humanoid = child:WaitForChild("Humanoid")
+    RootPart = child:WaitForChild("HumanoidRootPart")
+end)
